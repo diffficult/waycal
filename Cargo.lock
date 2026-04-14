@@ -575,15 +575,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "omacal"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "gtk4",
- "gtk4-layer-shell",
-]
-
-[[package]]
 name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -856,6 +847,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5fd04d9e306f1907bd13c6361b5c6bfc7b3b3c095ed3f8a9246390f8dbdee129"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "waycal"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "gtk4",
+ "gtk4-layer-shell",
 ]
 
 [[package]]

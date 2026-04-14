@@ -1,10 +1,10 @@
-# omacal
+# waycal
 
 A tiny calendar popup for Waybar. Click an icon in the bar, a small month view drops down under the bar, arrow keys navigate, Esc closes. That's it.
 
 Written in Rust with GTK4 and `gtk4-layer-shell` so the popup anchors itself to the top of the screen via the Wayland layer-shell protocol — no compositor config needed.
 
-![omacal screenshot](screenshot.png)
+![waycal screenshot](screenshot.png)
 
 ## Features
 
@@ -16,7 +16,7 @@ Written in Rust with GTK4 and `gtk4-layer-shell` so the popup anchors itself to 
 
 ## Requirements
 
-omacal is a small native app, not a Waybar plugin. It runs on any Linux desktop that has:
+waycal is a small native app, not a Waybar plugin. It runs on any Linux desktop that has:
 
 - A **Wayland compositor supporting `wlr-layer-shell`**
   — Hyprland, Sway, river, Wayfire, Hikari, LabWC, etc. (not GNOME or KDE — those don't implement layer-shell)
@@ -51,21 +51,21 @@ sudo apt install rustc cargo libgtk-4-dev libgtk4-layer-shell-dev pkg-config
 Then build and install the binary:
 
 ```sh
-git clone https://github.com/forrestknight/omacal.git
-cd omacal
+git clone https://github.com/forrestknight/waycal.git
+cd waycal
 cargo install --path .
 ```
 
-`cargo install` drops the compiled binary into `~/.cargo/bin/omacal`. Make sure that directory is on your `$PATH`.
+`cargo install` drops the compiled binary into `~/.cargo/bin/waycal`. Make sure that directory is on your `$PATH`.
 
 ## Waybar integration
 
 Add a custom module to your `~/.config/waybar/config.jsonc`:
 
 ```jsonc
-"custom/omacal": {
+"custom/waycal": {
   "format": "󰃭",
-  "on-click": "pkill -x omacal || omacal",
+  "on-click": "pkill -x waycal || waycal",
   "tooltip-format": "Calendar"
 }
 ```
@@ -73,13 +73,13 @@ Add a custom module to your `~/.config/waybar/config.jsonc`:
 Reference it in one of your `modules-*` lists, e.g. right after the clock:
 
 ```jsonc
-"modules-center": ["clock", "custom/omacal", ...]
+"modules-center": ["clock", "custom/waycal", ...]
 ```
 
 Optional styling in `~/.config/waybar/style.css`:
 
 ```css
-#custom-omacal {
+#custom-waycal {
     background-color: @background;
     color: @foreground;
     padding: 0 10px;
@@ -87,7 +87,7 @@ Optional styling in `~/.config/waybar/style.css`:
     border-radius: 16px;
     font-size: 12px;
 }
-#custom-omacal:hover {
+#custom-waycal:hover {
     background-color: alpha(@background, 0.7);
 }
 ```
@@ -103,11 +103,11 @@ Restart Waybar (`pkill -x waybar && setsid waybar &`) and click the icon.
 | `Enter`      | Jump back to today    |
 | `Esc`        | Close the popup       |
 
-Clicking the Waybar icon a second time also closes the popup (the `pkill -x omacal || omacal` command toggles).
+Clicking the Waybar icon a second time also closes the popup (the `pkill -x waycal || waycal` command toggles).
 
 ## Why not just use the Waybar clock tooltip?
 
-The built-in `clock` tooltip shows a calendar, but it's an HTML label tooltip — not focusable, not keyboard-navigable, and shares the clock module's click action. omacal is a real window you can interact with, and leaves your clock's click behavior untouched.
+The built-in `clock` tooltip shows a calendar, but it's an HTML label tooltip — not focusable, not keyboard-navigable, and shares the clock module's click action. waycal is a real window you can interact with, and leaves your clock's click behavior untouched.
 
 ## License
 

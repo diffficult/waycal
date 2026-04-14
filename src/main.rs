@@ -7,13 +7,13 @@ use gtk4::glib;
 use gtk4::prelude::*;
 use gtk4_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
 
-const APP_ID: &str = "com.fkcodes.omacal";
+const APP_ID: &str = "com.forrestknight.waycal";
 
 const CSS: &str = r#"
-window.omacal {
+window.waycal {
     background: transparent;
 }
-.omacal-root {
+.waycal-root {
     background-color: rgba(26, 33, 37, 0.96);
     border-radius: 16px;
     padding: 14px 18px;
@@ -22,30 +22,30 @@ window.omacal {
     font-size: 13px;
     min-width: 260px;
 }
-.omacal-header {
+.waycal-header {
     font-weight: bold;
     font-size: 15px;
     padding-bottom: 6px;
 }
-.omacal-weekday {
+.waycal-weekday {
     color: #8FBC8F;
     font-weight: bold;
     padding: 2px 6px;
 }
-.omacal-day {
+.waycal-day {
     padding: 4px 7px;
     min-width: 18px;
 }
-.omacal-day.dim {
+.waycal-day.dim {
     opacity: 0.3;
 }
-.omacal-day.today {
+.waycal-day.today {
     background-color: #8FBC8F;
     color: #1a2125;
     border-radius: 8px;
     font-weight: bold;
 }
-.omacal-footer {
+.waycal-footer {
     color: #6a7a71;
     font-size: 10px;
     padding-top: 8px;
@@ -126,7 +126,7 @@ fn build_ui(app: &gtk4::Application) {
     let window = gtk4::ApplicationWindow::new(app);
     window.set_decorated(false);
     window.set_resizable(false);
-    window.add_css_class("omacal");
+    window.add_css_class("waycal");
 
     window.init_layer_shell();
     window.set_layer(Layer::Top);
@@ -135,7 +135,7 @@ fn build_ui(app: &gtk4::Application) {
     window.set_margin(Edge::Top, 4);
 
     let header = gtk4::Label::new(None);
-    header.add_css_class("omacal-header");
+    header.add_css_class("waycal-header");
     header.set_halign(gtk4::Align::Center);
 
     let grid = gtk4::Grid::new();
@@ -144,11 +144,11 @@ fn build_ui(app: &gtk4::Application) {
     grid.set_halign(gtk4::Align::Center);
 
     let footer = gtk4::Label::new(Some("\u{2190}\u{2192} month   \u{2191}\u{2193} year   \u{23CE} today"));
-    footer.add_css_class("omacal-footer");
+    footer.add_css_class("waycal-footer");
     footer.set_halign(gtk4::Align::Center);
 
     let root = gtk4::Box::new(gtk4::Orientation::Vertical, 6);
-    root.add_css_class("omacal-root");
+    root.add_css_class("waycal-root");
     root.append(&header);
     root.append(&grid);
     root.append(&footer);
@@ -197,7 +197,7 @@ fn render(grid: &gtk4::Grid, header: &gtk4::Label, v: ViewDate) {
     let weekdays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
     for (i, name) in weekdays.iter().enumerate() {
         let lbl = gtk4::Label::new(Some(name));
-        lbl.add_css_class("omacal-weekday");
+        lbl.add_css_class("waycal-weekday");
         grid.attach(&lbl, i as i32, 0, 1, 1);
     }
 
@@ -214,7 +214,7 @@ fn render(grid: &gtk4::Grid, header: &gtk4::Label, v: ViewDate) {
     for i in 0..lead {
         let day = prev_days - lead + 1 + i;
         let lbl = gtk4::Label::new(Some(&day.to_string()));
-        lbl.add_css_class("omacal-day");
+        lbl.add_css_class("waycal-day");
         lbl.add_css_class("dim");
         grid.attach(&lbl, i, 1, 1, 1);
     }
@@ -224,7 +224,7 @@ fn render(grid: &gtk4::Grid, header: &gtk4::Label, v: ViewDate) {
         let col = idx % 7;
         let row = idx / 7 + 1;
         let lbl = gtk4::Label::new(Some(&d.to_string()));
-        lbl.add_css_class("omacal-day");
+        lbl.add_css_class("waycal-day");
         if is_current && d == today_day {
             lbl.add_css_class("today");
         }
@@ -239,7 +239,7 @@ fn render(grid: &gtk4::Grid, header: &gtk4::Label, v: ViewDate) {
         let col = idx % 7;
         let row = idx / 7 + 1;
         let lbl = gtk4::Label::new(Some(&day.to_string()));
-        lbl.add_css_class("omacal-day");
+        lbl.add_css_class("waycal-day");
         lbl.add_css_class("dim");
         grid.attach(&lbl, col, row, 1, 1);
     }
