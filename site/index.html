@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>waycal — a tiny calendar popup for Waybar</title>
+<title>waycal — A tiny calendar popup for Waybar</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="A tiny calendar popup for Waybar. Click an icon in the bar, a month view drops down, arrow keys navigate. Works on any wlr-layer-shell compositor.">
 <meta name="theme-color" content="#14191d">
@@ -28,7 +28,7 @@
 html, body {
   background: var(--bg);
   color: var(--text);
-  font-family: "Cascadia Code", "JetBrains Mono", "Fira Code", "SF Mono", Menlo, Consolas, monospace;
+  font-family: "Cascadia Code", "CaskaydiaMono Nerd Font", "JetBrains Mono", "Fira Code", "SF Mono", Menlo, Consolas, monospace;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -41,7 +41,7 @@ body {
     var(--bg);
 }
 main {
-  max-width: 720px;
+  max-width: 760px;
   margin: 0 auto;
   width: 100%;
   padding: 5rem 1.5rem 3rem;
@@ -50,79 +50,114 @@ main {
 @media (max-width: 640px) {
   main { padding: 3rem 1rem 2rem; }
 }
-.hero { text-align: center; margin-bottom: 4.5rem; }
+
+/* ───────── Hero ───────── */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  margin-bottom: 5rem;
+}
+.hero-text { flex: 1; min-width: 0; }
 .hero h1 {
-  font-size: clamp(3rem, 10vw, 4.5rem);
+  font-size: clamp(2.75rem, 8vw, 4rem);
   font-weight: 700;
   letter-spacing: -0.04em;
   color: var(--accent);
-  margin-bottom: 0.3rem;
   line-height: 1;
+  margin-bottom: 0.5rem;
 }
 .hero .tagline {
-  font-size: 1rem;
-  color: var(--muted);
-  margin-bottom: 3rem;
+  font-size: 1.05rem;
+  color: var(--text);
+  margin-bottom: 1.25rem;
+  line-height: 1.4;
 }
+.hero .subtagline {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.65;
+  max-width: 26rem;
+}
+.hero-visual {
+  flex-shrink: 0;
+}
+@media (max-width: 720px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    gap: 2.5rem;
+    margin-bottom: 4rem;
+  }
+  .hero .subtagline { margin-left: auto; margin-right: auto; }
+}
+
+/* ───────── Calendar (pixel-matched to src/main.rs) ───────── */
 .calendar {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 1rem 1.25rem;
-  display: inline-block;
-  min-width: 280px;
-  text-align: center;
+  background-color: rgba(26, 33, 37, 0.96);
+  border-radius: 16px;
+  padding: 14px 18px;
+  color: #c9d1d9;
+  font-family: "CaskaydiaMono Nerd Font", "Cascadia Code", "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  min-width: 260px;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+  outline: none;
   box-shadow:
-    0 1px 0 rgba(143, 188, 143, 0.04) inset,
     0 30px 80px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(143, 188, 143, 0.05);
-  font-size: 0.9rem;
+  transition: box-shadow 0.2s;
+}
+.calendar:focus-visible {
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.5),
+    0 0 0 2px var(--accent);
 }
 .cal-header {
-  font-weight: 700;
-  font-size: 1rem;
-  padding-bottom: 0.55rem;
+  font-weight: bold;
+  font-size: 15px;
+  padding-bottom: 6px;
+  text-align: center;
 }
 .cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, auto);
   gap: 2px;
+  justify-content: center;
 }
 .cal-weekday {
-  color: var(--accent);
-  font-weight: 700;
-  padding: 4px 6px;
-  font-size: 0.8rem;
+  color: #8FBC8F;
+  font-weight: bold;
+  padding: 2px 6px;
+  text-align: center;
 }
 .cal-day {
-  padding: 5px 6px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  min-width: 26px;
+  padding: 4px 7px;
+  min-width: 18px;
+  text-align: center;
 }
 .cal-day.dim { opacity: 0.3; }
 .cal-day.today {
-  background: var(--accent);
-  color: var(--surface);
-  font-weight: 700;
+  background-color: #8FBC8F;
+  color: #1a2125;
+  border-radius: 8px;
+  font-weight: bold;
 }
 .cal-footer {
-  color: var(--muted);
-  font-size: 0.65rem;
-  padding-top: 0.6rem;
-  margin-top: 0.5rem;
-  border-top: 1px solid var(--border);
+  color: #6a7a71;
+  font-size: 10px;
+  padding-top: 8px;
+  margin-top: 6px;
+  border-top: 1px solid rgba(143, 188, 143, 0.18);
+  text-align: center;
   letter-spacing: 0.02em;
 }
-.hero .subtagline {
-  margin-top: 2.5rem;
-  color: var(--muted);
-  font-size: 0.85rem;
-  max-width: 28rem;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.6;
-}
+
+/* ───────── Sections ───────── */
 section { margin-bottom: 3.5rem; }
+section:last-of-type { margin-bottom: 0; }
 h2 {
   font-size: 0.7rem;
   text-transform: uppercase;
@@ -132,6 +167,20 @@ h2 {
   padding-left: 0.5rem;
   font-weight: 600;
 }
+
+/* ───────── About ───────── */
+.about {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  line-height: 1.7;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+.about p + p { margin-top: 0.75rem; }
+.about .accent { color: var(--accent); }
+
+/* ───────── Install commands ───────── */
 .commands { display: flex; flex-direction: column; gap: 0.6rem; }
 .cmd {
   background: var(--surface);
@@ -144,15 +193,18 @@ h2 {
   align-items: center;
   gap: 1rem;
   user-select: none;
-  position: relative;
 }
-.cmd:hover { border-color: var(--border); background: var(--surface-soft); }
+.cmd:hover, .cmd:focus-visible {
+  border-color: var(--border);
+  background: var(--surface-soft);
+  outline: none;
+}
 .cmd .label {
   font-size: 0.65rem;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  min-width: 8rem;
+  min-width: 9rem;
   flex-shrink: 0;
 }
 .cmd code {
@@ -165,26 +217,29 @@ h2 {
   color: var(--muted);
   opacity: 0;
   transition: opacity 0.15s;
+  flex-shrink: 0;
 }
-.cmd:hover .copy-hint { opacity: 1; }
-.cmd.copied .copy-hint {
-  opacity: 1;
-  color: var(--accent);
-}
+.cmd:hover .copy-hint, .cmd:focus-visible .copy-hint { opacity: 1; }
+.cmd.copied .copy-hint { opacity: 1; color: var(--accent); }
 @media (max-width: 640px) {
   .cmd { flex-direction: column; align-items: flex-start; gap: 0.35rem; }
   .cmd .label { min-width: 0; }
+  .cmd .copy-hint { opacity: 1; }
 }
+
+/* ───────── Controls list ───────── */
 dl.keys {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.7rem 2rem;
   background: var(--surface);
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem 1.75rem;
   border-radius: var(--radius);
 }
 dl.keys dt { color: var(--accent); font-weight: 700; font-size: 0.9rem; }
 dl.keys dd { color: var(--muted); font-size: 0.85rem; }
+
+/* ───────── Links ───────── */
 .links {
   display: flex;
   gap: 0.6rem;
@@ -201,16 +256,19 @@ dl.keys dd { color: var(--muted); font-size: 0.85rem; }
   border: 1px solid transparent;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
-.links a:hover {
+.links a:hover, .links a:focus-visible {
   color: var(--accent);
   border-color: var(--border);
   background: var(--surface-soft);
+  outline: none;
 }
+
 footer {
   text-align: center;
   color: var(--muted);
   padding: 2rem 1rem 2.5rem;
   font-size: 0.75rem;
+  line-height: 1.8;
 }
 footer a { color: var(--muted); text-decoration: underline dotted; }
 footer a:hover { color: var(--accent); }
@@ -219,31 +277,43 @@ footer a:hover { color: var(--accent); }
 </head>
 <body>
 <main>
+
   <section class="hero">
-    <h1>waycal</h1>
-    <p class="tagline">a tiny calendar popup for waybar</p>
-    <div class="calendar" id="calendar"></div>
-    <p class="subtagline">
-      click a calendar icon in your bar, the month drops down, arrow keys navigate, escape closes. that's it.
-    </p>
+    <div class="hero-text">
+      <h1>waycal</h1>
+      <p class="tagline">A tiny calendar popup for Waybar.</p>
+      <p class="subtagline">Click a calendar icon in your bar, a month view drops down, arrow keys navigate, Escape closes. That's it. The popup to the right is the real thing &mdash; try the arrow keys.</p>
+    </div>
+    <div class="hero-visual">
+      <div class="calendar" id="calendar" tabindex="0" aria-label="Interactive calendar demo"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>About</h2>
+    <div class="about">
+      <p>waycal is ~250 lines of Rust wrapping GTK4 and <span class="accent">wlr-layer-shell</span>. The popup anchors itself directly to the top edge of the screen through the layer-shell protocol, so there is no Hyprland window rule, no hardcoded coordinates, and no compositor-specific config to edit. It works on Hyprland, Sway, river, Wayfire, LabWC, and anything else that implements layer-shell.</p>
+      <p>The Waybar icon click toggles it: running the binary while another instance is open kills the existing one, so a second click closes the popup. Keyboard focus is granted on-demand, meaning waycal never steals input from your other apps &mdash; you can keep typing in a terminal while the calendar is open.</p>
+      <p>No theme integration, no config file, no plugin API. One binary, one job.</p>
+    </div>
   </section>
 
   <section>
     <h2>Install</h2>
     <div class="commands">
-      <div class="cmd" data-copy="yay -S waycal">
-        <span class="label">Arch · Omarchy</span>
+      <div class="cmd" data-copy="yay -S waycal" tabindex="0" role="button" aria-label="Copy AUR install command">
+        <span class="label">Arch / Omarchy</span>
         <code>yay -S waycal</code>
         <span class="copy-hint">click to copy</span>
       </div>
-      <div class="cmd" data-copy="cargo install waycal">
+      <div class="cmd" data-copy="cargo install waycal" tabindex="0" role="button" aria-label="Copy cargo install command">
         <span class="label">Any distro w/ Rust</span>
         <code>cargo install waycal</code>
         <span class="copy-hint">click to copy</span>
       </div>
-      <div class="cmd" data-copy="curl -L https://github.com/forrestknight/waycal/releases/latest/download/waycal-0.1.0-x86_64-linux.tar.gz | tar -xz">
+      <div class="cmd" data-copy="curl -L https://github.com/forrestknight/waycal/releases/latest/download/waycal-0.1.0-x86_64-linux.tar.gz | tar -xz" tabindex="0" role="button" aria-label="Copy prebuilt binary install command">
         <span class="label">Prebuilt binary</span>
-        <code>curl … | tar -xz</code>
+        <code>curl &hellip; | tar -xz</code>
         <span class="copy-hint">click to copy</span>
       </div>
     </div>
@@ -262,58 +332,108 @@ footer a:hover { color: var(--accent); }
   <section>
     <h2>Links</h2>
     <nav class="links">
-      <a href="https://github.com/forrestknight/waycal">GitHub</a>
-      <a href="https://crates.io/crates/waycal">crates.io</a>
-      <a href="https://aur.archlinux.org/packages/waycal">AUR</a>
-      <a href="https://github.com/forrestknight/waycal/releases">Releases</a>
+      <a href="https://github.com/forrestknight/waycal" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://crates.io/crates/waycal" target="_blank" rel="noopener noreferrer">crates.io</a>
+      <a href="https://aur.archlinux.org/packages/waycal" target="_blank" rel="noopener noreferrer">AUR</a>
+      <a href="https://github.com/forrestknight/waycal/releases" target="_blank" rel="noopener noreferrer">Releases</a>
     </nav>
   </section>
+
 </main>
 <footer>
-  made by <a href="https://github.com/forrestknight">forrest knight</a> · MIT licensed · <a href="https://github.com/forrestknight/waycal/tree/master/site">source of this page</a>
+  Made by <a href="https://github.com/forrestknight" target="_blank" rel="noopener noreferrer">Forrest Knight</a> &middot; MIT licensed &middot; <a href="https://github.com/forrestknight/waycal/tree/master/site" target="_blank" rel="noopener noreferrer">source of this page</a>
 </footer>
+
 <script>
+/* ───────── Interactive calendar (mirrors src/main.rs) ───────── */
 (function () {
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  const weekdays = ["Mo","Tu","We","Th","Fr","Sa","Su"];
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const today = now.getDate();
-  const firstDow = new Date(y, m, 1).getDay();
-  const lead = (firstDow + 6) % 7;
-  const daysInMonth = new Date(y, m + 1, 0).getDate();
-  const prevDays = new Date(y, m, 0).getDate();
-  const el = document.getElementById("calendar");
+  var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var WEEKDAYS = ["Mo","Tu","We","Th","Fr","Sa","Su"];
+  var el = document.getElementById("calendar");
   if (!el) return;
-  let h = '<div class="cal-header">' + months[m] + ' ' + y + '</div>';
-  h += '<div class="cal-grid">';
-  weekdays.forEach(function (w) { h += '<div class="cal-weekday">' + w + '</div>'; });
-  for (let i = 0; i < lead; i++) {
-    const d = prevDays - lead + 1 + i;
-    h += '<div class="cal-day dim">' + d + '</div>';
+
+  var now = new Date();
+  var state = { year: now.getFullYear(), month: now.getMonth() };
+
+  function today() {
+    var d = new Date();
+    return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() };
   }
-  for (let d = 1; d <= daysInMonth; d++) {
-    const cls = d === today ? 'cal-day today' : 'cal-day';
-    h += '<div class="' + cls + '">' + d + '</div>';
+
+  function shiftMonth(s, delta) {
+    var total = s.year * 12 + s.month + delta;
+    var year = Math.floor(total / 12);
+    var month = ((total % 12) + 12) % 12;
+    return { year: year, month: month };
   }
-  const total = lead + daysInMonth;
-  const trailing = (7 - (total % 7)) % 7;
-  for (let i = 1; i <= trailing; i++) {
-    h += '<div class="cal-day dim">' + i + '</div>';
+  function shiftYear(s, delta) {
+    return { year: s.year + delta, month: s.month };
   }
-  h += '</div>';
-  h += '<div class="cal-footer">← → month   ↑ ↓ year   ⏎ today</div>';
-  el.innerHTML = h;
+
+  function daysInMonth(y, m) {
+    return new Date(y, m + 1, 0).getDate();
+  }
+
+  function render() {
+    var y = state.year, m = state.month;
+    var firstDow = new Date(y, m, 1).getDay();
+    var lead = (firstDow + 6) % 7;
+    var dim = daysInMonth(y, m);
+    var prevDim = daysInMonth(y, m - 1 < 0 ? 11 : m - 1);
+
+    var t = today();
+    var isCurrent = t.year === y && t.month === m;
+
+    var h = '<div class="cal-header">' + MONTHS[m] + ' ' + y + '</div>';
+    h += '<div class="cal-grid">';
+    for (var i = 0; i < WEEKDAYS.length; i++) {
+      h += '<div class="cal-weekday">' + WEEKDAYS[i] + '</div>';
+    }
+    for (var i = 0; i < lead; i++) {
+      var d = prevDim - lead + 1 + i;
+      h += '<div class="cal-day dim">' + d + '</div>';
+    }
+    for (var d = 1; d <= dim; d++) {
+      var cls = (isCurrent && d === t.day) ? 'cal-day today' : 'cal-day';
+      h += '<div class="' + cls + '">' + d + '</div>';
+    }
+    var total = lead + dim;
+    var trailing = (7 - (total % 7)) % 7;
+    for (var i = 1; i <= trailing; i++) {
+      h += '<div class="cal-day dim">' + i + '</div>';
+    }
+    h += '</div>';
+    h += '<div class="cal-footer">\u2190\u2192 month   \u2191\u2193 year   \u23CE today</div>';
+    el.innerHTML = h;
+  }
+
+  el.addEventListener("keydown", function (e) {
+    var handled = true;
+    switch (e.key) {
+      case "ArrowLeft":  state = shiftMonth(state, -1); break;
+      case "ArrowRight": state = shiftMonth(state, 1); break;
+      case "ArrowUp":    state = shiftYear(state, -1); break;
+      case "ArrowDown":  state = shiftYear(state, 1); break;
+      case "Enter":      var t = today(); state = { year: t.year, month: t.month }; break;
+      case "Escape":     el.blur(); return;
+      default: handled = false;
+    }
+    if (handled) { e.preventDefault(); render(); }
+  });
+
+  el.addEventListener("click", function () { el.focus(); });
+
+  render();
 })();
 
+/* ───────── Click-to-copy install commands ───────── */
 document.querySelectorAll(".cmd").forEach(function (cmd) {
-  cmd.addEventListener("click", function () {
-    const text = cmd.dataset.copy;
+  function copy() {
+    var text = cmd.dataset.copy;
     if (!text) return;
-    const done = function () {
+    var done = function () {
       cmd.classList.add("copied");
-      const hint = cmd.querySelector(".copy-hint");
+      var hint = cmd.querySelector(".copy-hint");
       if (hint) hint.textContent = "copied";
       setTimeout(function () {
         cmd.classList.remove("copied");
@@ -321,16 +441,18 @@ document.querySelectorAll(".cmd").forEach(function (cmd) {
       }, 1600);
     };
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done).catch(function () {
-        fallbackCopy(text); done();
-      });
+      navigator.clipboard.writeText(text).then(done).catch(function () { fallbackCopy(text); done(); });
     } else {
       fallbackCopy(text); done();
     }
+  }
+  cmd.addEventListener("click", copy);
+  cmd.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); copy(); }
   });
 });
 function fallbackCopy(text) {
-  const ta = document.createElement("textarea");
+  var ta = document.createElement("textarea");
   ta.value = text;
   ta.style.position = "fixed";
   ta.style.opacity = "0";
