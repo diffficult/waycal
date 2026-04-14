@@ -5,6 +5,7 @@ use chrono::{Datelike, Local, NaiveDate};
 use gtk4::gdk;
 use gtk4::glib;
 use gtk4::prelude::*;
+use gtk4_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
 
 const APP_ID: &str = "com.fkcodes.omacal";
 
@@ -126,7 +127,12 @@ fn build_ui(app: &gtk4::Application) {
     window.set_decorated(false);
     window.set_resizable(false);
     window.add_css_class("omacal");
-    window.set_default_size(300, 310);
+
+    window.init_layer_shell();
+    window.set_layer(Layer::Top);
+    window.set_keyboard_mode(KeyboardMode::OnDemand);
+    window.set_anchor(Edge::Top, true);
+    window.set_margin(Edge::Top, 4);
 
     let header = gtk4::Label::new(None);
     header.add_css_class("omacal-header");
@@ -177,18 +183,6 @@ fn build_ui(app: &gtk4::Application) {
         });
     }
     window.add_controller(key);
-
-    let was_active = Rc::new(RefCell::new(false));
-    {
-        let was_active = was_active.clone();
-        window.connect_is_active_notify(move |win| {
-            if win.is_active() {
-                *was_active.borrow_mut() = true;
-            } else if *was_active.borrow() {
-                win.close();
-            }
-        });
-    }
 
     window.present();
 }

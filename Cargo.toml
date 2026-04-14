@@ -2,9 +2,14 @@
 name = "omacal"
 version = "0.1.0"
 edition = "2024"
+description = "A tiny Waybar calendar popup for wlr-layer-shell compositors"
+license = "MIT"
+repository = "https://github.com/fkcodes/omacal"
+readme = "README.md"
 
 [dependencies]
 gtk4 = { version = "0.9", features = ["v4_12"] }
+gtk4-layer-shell = "0.5"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 [profile.release]
