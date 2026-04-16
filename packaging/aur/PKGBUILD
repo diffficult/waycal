@@ -1,6 +1,6 @@
 # Maintainer: Forrest Knight <forrest.knight.yt@gmail.com>
 pkgname=waycal
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc="A tiny Waybar calendar popup for wlr-layer-shell compositors"
 arch=('x86_64')
