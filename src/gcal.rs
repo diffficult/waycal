@@ -158,28 +158,38 @@ pub fn get_access_token() -> Result<String, Box<dyn std::error::Error>> {
     let creds_file: CredentialsFile = serde_json::from_str(&creds_text)?;
     let creds = creds_file.inner().ok_or("Invalid credentials format")?;
 
-    let redirect_uri = "urn:ietf:wg:oauth:2.0:oob";
+    let redirect_uri = "http://127.0.0.1";
     let auth_url = format!(
         "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent",
-        creds.auth_uri, creds.client_id, redirect_uri, SCOPES
+        creds.auth_uri, creds.client_id, urlencoded(redirect_uri), SCOPES
     );
 
     eprintln!("\nOpen this URL in your browser to authorize waycal:\n\n{}\n", auth_url);
-    eprint!("Paste the authorization code here: ");
+    eprint!("Paste the full redirect URL from your browser here: ");
     io::stderr().flush()?;
 
     let stdin = io::stdin();
-    let code = stdin.lock().lines().next()
+    let pasted = stdin.lock().lines().next()
         .ok_or("No input")?
         .map_err(|e| e.to_string())?;
-    let code = code.trim().to_string();
+    let pasted = pasted.trim();
+
+    // Extract code= from the redirect URL or treat the whole thing as a bare code
+    let code = if let Some(qs) = pasted.split('?').nth(1) {
+        qs.split('&').find_map(|pair| {
+            let mut kv = pair.splitn(2, '=');
+            if kv.next() == Some("code") { kv.next().map(|v| v.to_string()) } else { None }
+        }).ok_or("No code= param found in pasted URL")?
+    } else {
+        pasted.to_string()
+    };
 
     // Exchange code for tokens
     let resp: TokenResponse = ureq::post(&creds.token_uri)
         .send_form(&[
             ("client_id",     &creds.client_id),
             ("client_secret", &creds.client_secret),
-            ("redirect_uri",  redirect_uri),
+            ("redirect_uri",  &redirect_uri),
             ("grant_type",    "authorization_code"),
             ("code",          &code),
         ])?
@@ -397,7 +407,7 @@ pub fn bar_output() {
         ])
     } else if count == 0 {
         HashMap::from([
-            ("text",    serde_json::json!(format!("<span size='14pt'>{}</span>", cal_icon))),
+            ("text",    serde_json::json!(format!("<span size='14pt'>{} </span>", cal_icon))),
             ("tooltip", serde_json::json!("No events today")),
             ("class",   serde_json::json!("calendar-empty")),
             ("alt",     serde_json::json!("0")),
