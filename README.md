@@ -1,8 +1,8 @@
 # waycal
 
-A tiny calendar popup for Waybar. Click an icon in the bar, a small month view drops down under the bar, arrow keys navigate, Esc closes. That's it.
+A calendar popup for Waybar with Google Calendar integration. Click an icon in the bar to open a month view with your events — colored dots on days that have events, a live event list for the selected day, keyboard navigation, and a bar indicator showing today's event count.
 
-Written in Rust with GTK4 and `gtk4-layer-shell` so the popup anchors itself to the top of the screen via the Wayland layer-shell protocol — no compositor config needed.
+Written in Rust with GTK4 and `gtk4-layer-shell`. Fully self-contained: one binary handles both the Waybar bar widget and the popup, with no Python, no shell scripts, and no external calendar daemons required.
 
 <p align="center">
   <img src="screenshot.png" alt="waycal sharp style" width="360">
@@ -13,112 +13,168 @@ Written in Rust with GTK4 and `gtk4-layer-shell` so the popup anchors itself to 
 ## Features
 
 - **Month view** with today highlighted, leading/trailing days dimmed
+- **Google Calendar integration** — fetches events via OAuth2, caches per-month JSON locally (24h TTL), refreshes automatically
+- **Event dots** on days that have events, colored per calendar
+- **Day event panel** — click any day to see its events listed next to the calendar with time, icon, and title
 - **Keyboard nav:** `←`/`→` month, `↑`/`↓` year, `Enter` today, `s` toggle style, `Esc` close
-- **Two looks:** press `s` to swap between a sharp-cornered, bordered "Omarchy" style and a soft rounded style. Your choice is remembered between launches
-- **Toggle-click:** clicking the Waybar icon while the popup is open closes it
-- **Anchored** just below the bar, horizontally centered, no config file hacks
-- **Dark theme** with a sage-green accent, monospace font. Self-contained CSS — no theme integration or external dependencies to worry about.
+- **Two looks:** press `s` to swap between sharp-cornered and soft rounded style. Choice is remembered between launches
+- **Waybar bar widget mode** (`--bar-output`) — prints today's event count as Waybar JSON; the count is shown in Catppuccin red when events exist
+- **Position-aware anchoring** (`--anchor left|center|right`) — the popup opens at the correct corner of the screen depending on where the module lives in the bar
+- **Dark theme** with sage-green accents, Pango markup for inline event colors — no external theme dependencies
 
 ## Requirements
 
 waycal is a small native app, not a Waybar plugin. It runs on any Linux desktop that has:
 
 - A **Wayland compositor supporting `wlr-layer-shell`**
-  — Hyprland, Sway, river, Wayfire, Hikari, LabWC, etc. (not GNOME or KDE — those don't implement layer-shell)
+  — Hyprland, Sway, river, Wayfire, Hikari, LabWC, etc. (not GNOME or KDE)
 - **Waybar** (for the click-to-launch integration)
-- **GTK4** and **gtk4-layer-shell** shared libraries (already pulled in by most of the above compositors' package sets)
-- A **Nerd Font** installed as a system font, so the Waybar icon glyph renders. CaskaydiaMono Nerd Font is the default in Omarchy and works out of the box.
-
-It is distribution-agnostic. The instructions below use `cargo`, which works on Arch, Fedora, Debian/Ubuntu, NixOS, etc.
+- **GTK4** and **gtk4-layer-shell** shared libraries
+- A **Nerd Font** installed as a system font (CaskaydiaMono Nerd Font works out of the box)
+- A **Google Cloud project** with the Calendar API enabled and a client secret JSON file (see [Google Calendar setup](#google-calendar-setup))
 
 ## Install
-
-### Arch / Omarchy (AUR)
-
-```sh
-yay -S waycal
-```
-
-Or with any other AUR helper (`paru -S waycal`), or manually via `git clone https://aur.archlinux.org/waycal.git && cd waycal && makepkg -si`.
-
-### Any distro with Rust installed
-
-```sh
-cargo install waycal
-```
-
-This pulls the latest release from [crates.io](https://crates.io/crates/waycal), builds it, and drops the binary into `~/.cargo/bin/waycal`. Make sure that directory is on your `$PATH`. You'll also need the GTK4 + `gtk4-layer-shell` development headers installed so cargo can link against them:
-
-| Distro             | Install command                                                                   |
-| ------------------ | --------------------------------------------------------------------------------- |
-| Arch / Omarchy     | `sudo pacman -S --needed gtk4 gtk4-layer-shell pkgconf`                           |
-| Fedora             | `sudo dnf install gtk4-devel gtk4-layer-shell-devel pkgconf`                      |
-| Debian / Ubuntu    | `sudo apt install libgtk-4-dev libgtk4-layer-shell-dev pkg-config`                |
-
-### Prebuilt binary
-
-Each tagged release ships a prebuilt x86_64 Linux tarball on the [releases page](https://github.com/forrestknight/waycal/releases). Extract it and drop `waycal` anywhere on your `$PATH`.
 
 ### Build from source
 
 ```sh
-git clone https://github.com/forrestknight/waycal.git
+git clone <your-fork-url>
 cd waycal
 cargo build --release
 install -Dm755 target/release/waycal ~/.local/bin/waycal
 ```
 
+Dependencies needed to link (dev headers):
+
+| Distro          | Install command                                                        |
+| --------------- | ---------------------------------------------------------------------- |
+| Arch            | `sudo pacman -S --needed gtk4 gtk4-layer-shell pkgconf`                |
+| Fedora          | `sudo dnf install gtk4-devel gtk4-layer-shell-devel pkgconf`           |
+| Debian / Ubuntu | `sudo apt install libgtk-4-dev libgtk4-layer-shell-dev pkg-config`     |
+
+## Google Calendar setup
+
+### 1. Create a Google Cloud project and credentials
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) → **New project**
+2. Enable the **Google Calendar API** for the project
+3. Go to **APIs & Services → Credentials → Create credentials → OAuth 2.0 Client ID**
+4. Choose **Desktop app** as application type
+5. Download the JSON file (this is your `credentials.json`)
+
+### 2. Install credentials
+
+```sh
+mkdir -p ~/.config/waycal
+cp /path/to/downloaded-credentials.json ~/.config/waycal/credentials.json
+```
+
+### 3. Authorize waycal
+
+Run the bar-output command once to trigger the OAuth flow:
+
+```sh
+waycal --bar-output
+```
+
+It will print an authorization URL to stderr. Open it in your browser, click **Allow**, then paste the authorization code that Google gives you back into the terminal. The token is saved to `~/.cache/waycal/token.json` and refreshed automatically on future runs.
+
 ## Waybar integration
+
+### Bar widget (event count)
 
 Add a custom module to your `~/.config/waybar/config.jsonc`:
 
 ```jsonc
-"custom/waycal": {
-  "format": "󰃭",
-  "on-click": "pkill -x waycal || waycal",
-  "tooltip-format": "Calendar"
+"custom/calendar": {
+  "exec": "waycal --bar-output",
+  "return-type": "json",
+  "interval": 60,
+  "on-click": "~/.config/waybar/scripts/toggle_calendar.sh"
 }
 ```
 
-Reference it in one of your `modules-*` lists, e.g. right after the clock:
+Reference it in one of your `modules-*` lists:
 
 ```jsonc
-"modules-center": ["clock", "custom/waycal", ...]
+"modules-right": ["custom/calendar", "clock"]
 ```
 
-Optional styling in `~/.config/waybar/style.css`:
+### Toggle script
 
-```css
-#custom-waycal {
-    background-color: @background;
-    color: @foreground;
-    padding: 0 10px;
-    margin: 5px 0;
-    border-radius: 16px;
-    font-size: 12px;
-}
-#custom-waycal:hover {
-    background-color: alpha(@background, 0.7);
-}
+Create `~/.config/waybar/scripts/toggle_calendar.sh` with the content below. The script kills waycal if it's already open (toggle), then reads your waybar config to detect whether the module is in the left, center, or right section and passes the correct `--anchor` so the popup appears at the right corner of the screen.
+
+```bash
+#!/usr/bin/env bash
+pkill -x waycal && exit 0
+
+CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/config.jsonc"
+
+ANCHOR=$(python3 - "$CONFIG" <<'EOF'
+import json, re, sys
+try:
+    with open(sys.argv[1]) as f:
+        txt = re.sub(r'//[^\n]*', '', f.read())
+    data = json.loads(txt)
+except Exception:
+    print('center'); sys.exit(0)
+configs = data if isinstance(data, list) else [data]
+for cfg in configs:
+    if 'custom/calendar' in cfg.get('modules-right', []):
+        print('right'); sys.exit(0)
+    if 'custom/calendar' in cfg.get('modules-center', []):
+        print('center'); sys.exit(0)
+    if 'custom/calendar' in cfg.get('modules-left', []):
+        print('left'); sys.exit(0)
+print('center')
+EOF
+)
+
+exec waycal --anchor "${ANCHOR:-center}"
+```
+
+Make it executable:
+
+```sh
+chmod +x ~/.config/waybar/scripts/toggle_calendar.sh
 ```
 
 Restart Waybar (`pkill -x waybar && setsid waybar &`) and click the icon.
 
 ## Controls
 
-| Key          | Action                                     |
-| ------------ | ------------------------------------------ |
-| `←` / `→`    | Previous / next month                      |
-| `↑` / `↓`    | Previous / next year                       |
-| `Enter`      | Jump back to today                         |
-| `s`          | Toggle sharp / rounded style (persisted)   |
-| `Esc`        | Close the popup                            |
+| Key         | Action                                   |
+| ----------- | ---------------------------------------- |
+| `←` / `→`   | Previous / next month                    |
+| `↑` / `↓`   | Previous / next year                     |
+| `Enter`     | Jump back to today                       |
+| `s`         | Toggle sharp / rounded style (persisted) |
+| `Esc`       | Close the popup                          |
+| Click a day | Show that day's events in the side panel |
 
-Clicking the Waybar icon a second time also closes the popup (the `pkill -x waycal || waycal` command toggles).
+## CLI flags
+
+| Flag                    | Description                                               |
+| ----------------------- | --------------------------------------------------------- |
+| `--bar-output`          | Print today's event count as Waybar JSON, then exit       |
+| `--anchor left\|center\|right` | Anchor the popup to the left, center, or right of the screen (default: `center`) |
+
+## File locations
+
+| Path                                         | Purpose                                   |
+| -------------------------------------------- | ----------------------------------------- |
+| `~/.config/waycal/credentials.json`          | Google OAuth2 client secret (you provide) |
+| `~/.cache/waycal/token.json`                 | OAuth2 access + refresh token (auto-managed) |
+| `~/.cache/waycal/events_YYYY-MM.json`        | Per-month event cache (24h TTL)           |
+| `~/.local/state/waycal/style`                | Persisted sharp/rounded style preference  |
 
 ## Why not just use the Waybar clock tooltip?
 
 The built-in `clock` tooltip shows a calendar, but it's an HTML label tooltip — not focusable, not keyboard-navigable, and shares the clock module's click action. waycal is a real window you can interact with, and leaves your clock's click behavior untouched.
+
+## Fork notes
+
+The Google Calendar integration, bar widget mode, position-aware anchoring, event panel, and related documentation in this fork were implemented with [Claude Code](https://claude.ai/code) using the Claude Sonnet 4.6 model.
 
 ## License
 
