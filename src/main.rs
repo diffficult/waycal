@@ -218,6 +218,7 @@ fn main() -> glib::ExitCode {
 // ── UI builder ────────────────────────────────────────────────────────────────
 
 fn build_ui(app: &gtk4::Application, anchor: Anchor, config: config::Config) {
+    let gcal_enabled = config.gcal_enabled;
     let config = std::rc::Rc::new(config);
     let window = gtk4::ApplicationWindow::new(app);
     window.set_decorated(false);
@@ -273,16 +274,18 @@ fn build_ui(app: &gtk4::Application, anchor: Anchor, config: config::Config) {
     panel.set_valign(gtk4::Align::Start);
 
     outer.append(&left_box);
-    outer.append(&panel);
+    if gcal_enabled { outer.append(&panel); }
     window.set_child(Some(&outer));
 
     // Initial render (no data yet)
     render_all(&grid, &header, &panel, *view_state.borrow(), *selected_day.borrow(),
-               &month_data, &selected_day);
+               &month_data, &selected_day, gcal_enabled);
 
-    // Kick off background load
-    let v = *view_state.borrow();
-    spawn_load(v.year, v.month, (*config).clone(), &month_data, &grid, &header, &panel, &view_state, &selected_day);
+    // Kick off background load if gcal is enabled
+    if gcal_enabled {
+        let v = *view_state.borrow();
+        spawn_load(v.year, v.month, (*config).clone(), &month_data, &grid, &header, &panel, &view_state, &selected_day);
+    }
 
     // Keyboard handler
     let key = gtk4::EventControllerKey::new();
@@ -324,12 +327,14 @@ fn build_ui(app: &gtk4::Application, anchor: Anchor, config: config::Config) {
             if month_changed {
                 *month_data.borrow_mut() = None;
                 render_all(&grid, &header, &panel, next, *selected_day.borrow(),
-                           &month_data, &selected_day);
-                spawn_load(next.year, next.month, (*config).clone(), &month_data, &grid, &header, &panel,
-                           &view_state, &selected_day);
+                           &month_data, &selected_day, gcal_enabled);
+                if gcal_enabled {
+                    spawn_load(next.year, next.month, (*config).clone(), &month_data, &grid, &header, &panel,
+                               &view_state, &selected_day);
+                }
             } else {
                 render_all(&grid, &header, &panel, next, *selected_day.borrow(),
-                           &month_data, &selected_day);
+                           &month_data, &selected_day, gcal_enabled);
             }
             glib::Propagation::Stop
         });
@@ -375,7 +380,7 @@ fn spawn_load(
                         *month_data.borrow_mut() = Some(cache);
                     }
                     render_all(&grid, &header, &panel, current, *selected_day.borrow(),
-                               &month_data, &selected_day);
+                               &month_data, &selected_day, true);
                 }
                 glib::ControlFlow::Break
             }
@@ -395,9 +400,10 @@ fn render_all(
     sel:          NaiveDate,
     month_data:   &Rc<RefCell<Option<MonthCache>>>,
     selected_day: &Rc<RefCell<NaiveDate>>,
+    gcal_enabled: bool,
 ) {
-    render_grid(grid, header, v, sel, month_data, selected_day, panel);
-    render_panel(panel, sel, month_data);
+    render_grid(grid, header, v, sel, month_data, selected_day, panel, gcal_enabled);
+    if gcal_enabled { render_panel(panel, sel, month_data); }
 }
 
 // ── Grid ──────────────────────────────────────────────────────────────────────
@@ -410,6 +416,7 @@ fn render_grid(
     month_data:   &Rc<RefCell<Option<MonthCache>>>,
     selected_day: &Rc<RefCell<NaiveDate>>,
     panel:        &gtk4::Box,
+    gcal_enabled: bool,
 ) {
     header.set_text(&format!("{} {}", month_name(v.month), v.year));
     while let Some(c) = grid.first_child() { grid.remove(&c); }
@@ -431,7 +438,7 @@ fn render_grid(
     for i in 0..lead {
         let d    = prev_days - lead + 1 + i;
         let date = NaiveDate::from_ymd_opt(prev.year, prev.month, d as u32).unwrap();
-        let cell = make_day_cell(d, date, false, false, false, &[], selected_day, month_data, panel);
+        let cell = make_day_cell(d, date, false, false, false, &[], selected_day, month_data, panel, gcal_enabled);
         grid.attach(&cell, i, 1, 1, 1);
     }
 
@@ -442,7 +449,7 @@ fn render_grid(
         let date = NaiveDate::from_ymd_opt(v.year, v.month, d as u32).unwrap();
         let date_str = date.format("%Y-%m-%d").to_string();
 
-        let dots: Vec<(String, String)> = {
+        let dots: Vec<(String, String)> = if gcal_enabled {
             let md = month_data.borrow();
             if let Some(cache) = md.as_ref() {
                 let evs = cache.events_for_date(&date_str);
@@ -456,11 +463,11 @@ fn render_grid(
                 }
                 seen
             } else { vec![] }
-        };
+        } else { vec![] };
 
         let is_today = is_cur_mo && d == today.day() as i32;
         let cell = make_day_cell(d, date, true, is_today, date == sel,
-                                 &dots, selected_day, month_data, panel);
+                                 &dots, selected_day, month_data, panel, gcal_enabled);
         grid.attach(&cell, col, row, 1, 1);
     }
 
@@ -472,7 +479,7 @@ fn render_grid(
         let col  = idx % 7;
         let row  = idx / 7 + 1;
         let date = NaiveDate::from_ymd_opt(next.year, next.month, (i + 1) as u32).unwrap();
-        let cell = make_day_cell(i + 1, date, false, false, false, &[], selected_day, month_data, panel);
+        let cell = make_day_cell(i + 1, date, false, false, false, &[], selected_day, month_data, panel, gcal_enabled);
         grid.attach(&cell, col, row, 1, 1);
     }
 }
@@ -487,6 +494,7 @@ fn make_day_cell(
     selected_day: &Rc<RefCell<NaiveDate>>,
     month_data:   &Rc<RefCell<Option<MonthCache>>>,
     panel:        &gtk4::Box,
+    gcal_enabled: bool,
 ) -> gtk4::Box {
     let cell = gtk4::Box::new(gtk4::Orientation::Vertical, 0);
     cell.set_halign(gtk4::Align::Center);
@@ -522,7 +530,7 @@ fn make_day_cell(
 
         gesture.connect_released(move |_, _, _, _| {
             *selected_day.borrow_mut() = date;
-            render_panel(&panel, date, &month_data);
+            if gcal_enabled { render_panel(&panel, date, &month_data); }
 
             // Update .selected class on all day cells (direct children of the grid)
             if let Some(grid_widget) = cell_ref.parent() {

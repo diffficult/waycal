@@ -10,6 +10,12 @@ Written in Rust with GTK4 and `gtk4-layer-shell`. Fully self-contained: one bina
   <img src="screenshot-rounded.png" alt="waycal rounded style" width="360">
 </p>
 
+**With Google Calendar integration enabled:**
+
+<p align="center">
+  <img src="screenshot-gcal.png" alt="waycal with Google Calendar events" width="720">
+</p>
+
 ## Features
 
 - **Month view** with today highlighted, leading/trailing days dimmed
@@ -159,10 +165,62 @@ Restart Waybar (`pkill -x waybar && setsid waybar &`) and click the icon.
 | `--bar-output`          | Print today's event count as Waybar JSON, then exit       |
 | `--anchor left\|center\|right` | Anchor the popup to the left, center, or right of the screen (default: `center`) |
 
+## Configuration
+
+waycal reads `~/.config/waycal/config` on startup and writes a commented default on first run. All keys are optional — omit any section or key to keep the built-in defaults.
+
+```ini
+# ~/.config/waycal/config
+
+[theme]
+preset = catppuccin-mocha   # default | catppuccin-mocha | catppuccin-latte |
+                             # tokyonight-storm | gruvbox | dracula
+# Individual keys override the preset:
+# accent          = #94e2d5
+# background      = #1e1e2e
+# text            = #cdd6f4
+# text_muted      = #6c7086
+# bar_count_color = #f38ba8
+# font_family     = CaskaydiaMono Nerd Font, monospace
+# font_size       = 13
+
+# Google Calendar integration — false by default (plain calendar mode)
+[gcal]
+enabled = true
+
+# Fallback for unrecognized calendars
+[default]
+color = #cdd6f4
+icon  = 󰒆
+
+# One section per Google Calendar (name must match exactly)
+[calendar "Personal"]
+color = #dd7878
+icon  = 󰋚
+
+[calendar "Work"]
+color = #89b4fa
+icon  = 󰃭
+```
+
+A fully commented `config.example` is included in the repo root.
+
+### Theme presets
+
+| Preset              | Background | Accent    |
+| ------------------- | ---------- | --------- |
+| `default`           | `#1a2125`  | `#8FBC8F` |
+| `catppuccin-mocha`  | `#1e1e2e`  | `#a6e3a1` |
+| `catppuccin-latte`  | `#eff1f5`  | `#40a02b` |
+| `tokyonight-storm`  | `#24283b`  | `#7aa2f7` |
+| `gruvbox`           | `#282828`  | `#8ec07c` |
+| `dracula`           | `#282a36`  | `#50fa7b` |
+
 ## File locations
 
 | Path                                         | Purpose                                   |
 | -------------------------------------------- | ----------------------------------------- |
+| `~/.config/waycal/config`                    | Theme, calendar colors, gcal toggle       |
 | `~/.config/waycal/credentials.json`          | Google OAuth2 client secret (you provide) |
 | `~/.cache/waycal/token.json`                 | OAuth2 access + refresh token (auto-managed) |
 | `~/.cache/waycal/events_YYYY-MM.json`        | Per-month event cache (24h TTL)           |
@@ -174,7 +232,15 @@ The built-in `clock` tooltip shows a calendar, but it's an HTML label tooltip �
 
 ## Fork notes
 
-The Google Calendar integration, bar widget mode, position-aware anchoring, event panel, and related documentation in this fork were implemented with [Claude Code](https://claude.ai/code) using the Claude Sonnet 4.6 model.
+This fork adds the following on top of the original waycal:
+
+- **Google Calendar integration** — OAuth2 token management, per-month event cache (24h TTL), colored event dots per day, selected-day event panel with time + icon + title
+- **Bar widget mode** (`--bar-output`) — outputs Waybar JSON with today's event count; the count is colored via `bar_count_color` in the theme
+- **Position-aware anchoring** (`--anchor left|center|right`) — popup opens at the correct screen corner based on where the Waybar module lives
+- **Themeable config** (`~/.config/waycal/config`) — INI-style config with 5 built-in presets, per-calendar icon/color overrides, and a `[gcal] enabled` toggle to switch between plain and Google Calendar mode
+- **`[gcal] enabled` toggle** — when `false` (default), waycal runs as the original plain calendar with no Google Calendar dependency; set to `true` to enable event fetching
+
+All additions were implemented with [Claude Code](https://claude.ai/code) using the Claude Sonnet 4.6 model.
 
 ## License
 

@@ -23,9 +23,10 @@ pub struct CalEntry {
 
 #[derive(Clone)]
 pub struct Config {
-    pub theme:       ThemeConfig,
-    pub default_cal: CalEntry,
-    pub calendars:   Vec<CalEntry>,
+    pub theme:        ThemeConfig,
+    pub default_cal:  CalEntry,
+    pub calendars:    Vec<CalEntry>,
+    pub gcal_enabled: bool,
 }
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
@@ -47,13 +48,14 @@ impl Default for ThemeConfig {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            theme:       ThemeConfig::default(),
-            default_cal: CalEntry {
+            theme:        ThemeConfig::default(),
+            default_cal:  CalEntry {
                 name:  String::new(),
                 color: "#cdd6f4".into(),
                 icon:  "\u{f0486}".into(),
             },
-            calendars: Vec::new(),
+            calendars:    Vec::new(),
+            gcal_enabled: false,
         }
     }
 }
@@ -150,12 +152,14 @@ pub fn load() -> Config {
 enum Section {
     None,
     Theme,
+    Gcal,
     Default,
     Calendar(usize),
 }
 
 fn parse(text: &str) -> Config {
     let mut theme_raw: HashMap<String, String> = HashMap::new();
+    let mut gcal_enabled  = false;
     let mut default_color = String::new();
     let mut default_icon  = String::new();
     let mut calendars: Vec<CalEntry> = Vec::new();
@@ -170,6 +174,8 @@ fn parse(text: &str) -> Config {
             let lower = inner.to_ascii_lowercase();
             if lower == "theme" {
                 section = Section::Theme;
+            } else if lower == "gcal" {
+                section = Section::Gcal;
             } else if lower == "default" {
                 section = Section::Default;
             } else if lower.starts_with("calendar ") {
@@ -187,6 +193,9 @@ fn parse(text: &str) -> Config {
             let val = line[eq + 1..].trim().to_string();
             match &mut section {
                 Section::Theme => { theme_raw.insert(key, val); }
+                Section::Gcal => {
+                    if key == "enabled" { gcal_enabled = val.trim() == "true"; }
+                }
                 Section::Default => match key.as_str() {
                     "color" => default_color = val,
                     "icon"  => default_icon  = val,
@@ -230,7 +239,7 @@ fn parse(text: &str) -> Config {
         icon:  if default_icon.is_empty()  { "\u{f0486}".into() } else { default_icon },
     };
 
-    Config { theme, default_cal, calendars }
+    Config { theme, default_cal, calendars, gcal_enabled }
 }
 
 // ── Write default config on first run ─────────────────────────────────────────
@@ -258,6 +267,11 @@ preset = default
 # bar_count_color = #f38ba8
 # font_family     = CaskaydiaMono Nerd Font, monospace
 # font_size       = 13
+
+# Google Calendar integration (requires credentials.json and OAuth setup)
+# Set enabled = true after completing the OAuth flow (waycal --anchor center)
+[gcal]
+enabled = false
 
 # Fallback color/icon for calendars not listed below
 [default]

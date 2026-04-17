@@ -25,6 +25,14 @@ preset = default
 # font_family     = CaskaydiaMono Nerd Font, monospace
 # font_size       = 13
 
+# ── Google Calendar integration ───────────────────────────────────────────────
+#
+# Set enabled = true after completing the OAuth flow (waycal --anchor center).
+# When false (default), waycal shows a plain calendar with no event data.
+
+[gcal]
+enabled = false
+
 # ── Default calendar ──────────────────────────────────────────────────────────
 #
 # Color and icon used for any Google Calendar not matched by a [calendar] entry.
