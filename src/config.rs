@@ -128,7 +128,7 @@ fn config_path() -> PathBuf {
         .unwrap_or_else(|| {
             PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".config")
         });
-    base.join("waycal").join("config.ini")
+    base.join("waycal").join("config")
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -243,7 +243,7 @@ fn write_default(path: &PathBuf) -> std::io::Result<()> {
 }
 
 const DEFAULT_CONFIG: &str = "\
-# waycal configuration  ~/.config/waycal/config.ini
+# waycal configuration  ~/.config/waycal/config
 #
 # [theme] preset choices:
 #   default | catppuccin-mocha | catppuccin-latte | tokyonight-storm | gruvbox | dracula

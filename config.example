@@ -1,5 +1,5 @@
 # waycal configuration example
-# Copy to ~/.config/waycal/config.ini and edit as needed.
+# Copy to ~/.config/waycal/config and edit as needed.
 # (waycal writes this file automatically on first run)
 #
 # Lines starting with # are comments.
