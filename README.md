@@ -13,7 +13,9 @@ Written in Rust with GTK4 and `gtk4-layer-shell`. Fully self-contained: one bina
 **With Google Calendar integration enabled:**
 
 <p align="center">
-  <img src="screenshot_new.png" alt="waycal with Google Calendar events" width="720">
+  <img src="screenshot_new.png" alt="waycal with Google Calendar events, sharp style" width="360">
+  &nbsp;&nbsp;
+  <img src="screenshot_rounded.png" alt="waycal with Google Calendar events, rounded style" width="360">
 </p>
 
 ## Features
