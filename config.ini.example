@@ -1,0 +1,61 @@
+# waycal configuration example
+# Copy to ~/.config/waycal/config.ini and edit as needed.
+# (waycal writes this file automatically on first run)
+#
+# Lines starting with # are comments.
+# Values are unquoted — everything after = is used as-is.
+
+# ── Theme ─────────────────────────────────────────────────────────────────────
+#
+# preset choices:
+#   default | catppuccin-mocha | catppuccin-latte | tokyonight-storm | gruvbox | dracula
+#
+# A preset fills all color values. Any key below the preset line overrides
+# just that one color, leaving the rest from the preset.
+
+[theme]
+preset = default
+
+# Uncomment and change individual keys to override specific colors:
+# background      = #1a2125   # popup background
+# accent          = #8FBC8F   # border, weekday labels, today highlight, panel header
+# text            = #c9d1d9   # main text color
+# text_muted      = #6a7a71   # dimmed text, event times, footer
+# bar_count_color = #f38ba8   # event count color in the Waybar widget
+# font_family     = CaskaydiaMono Nerd Font, monospace
+# font_size       = 13
+
+# ── Default calendar ──────────────────────────────────────────────────────────
+#
+# Color and icon used for any Google Calendar not matched by a [calendar] entry.
+
+[default]
+color = #cdd6f4
+icon  = 󰒆
+
+# ── Per-calendar entries ──────────────────────────────────────────────────────
+#
+# Add a [calendar "Name"] section for each calendar you want to customize.
+# The name must match exactly what Google Calendar shows (case-sensitive).
+#
+# Nerd Font icon reference: https://www.nerdfonts.com/cheat-sheet
+
+# [calendar "Personal"]
+# color = #dd7878
+# icon  = 󰋚
+
+# [calendar "Work"]
+# color = #89b4fa
+# icon  = 󰃭
+
+# [calendar "Birthdays"]
+# color = #df8e1d
+# icon  = 󰃰
+
+# [calendar "Family"]
+# color = #40a02b
+# icon  =
+
+# [calendar "Tasks"]
+# color = #ea76cb
+# icon  = 󰄱

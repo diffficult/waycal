@@ -4,25 +4,7 @@ use std::collections::HashMap;
 use std::io::{self, BufRead, Write as IoWrite};
 use std::path::PathBuf;
 
-// ── Calendar color/icon map ───────────────────────────────────────────────────
-
-const CALENDAR_MAP: &[(&str, &str, &str)] = &[
-    ("Personal",             "#dd7878", "\u{f06eb}"),  // 󰋚
-    ("Birthdays",            "#df8e1d", "\u{f00f0}"),  // 󰃰
-    ("Consultas y Estudios", "#1e66f5", "\u{f0237}"),  // 󰈷
-    ("Family",               "#40a02b", "\u{f0c0}"),   //
-    ("Tasks",                "#ea76cb", "\u{f0131}"),  // 󰄱
-];
-const DEFAULT_COLOR: &str = "#cdd6f4";
-const DEFAULT_ICON: &str  = "\u{f0486}"; // 󰒆 → calendar icon
-
-fn cal_color(name: &str) -> &'static str {
-    CALENDAR_MAP.iter().find(|(n, _, _)| *n == name).map(|(_, c, _)| *c).unwrap_or(DEFAULT_COLOR)
-}
-
-fn cal_icon(name: &str) -> &'static str {
-    CALENDAR_MAP.iter().find(|(n, _, _)| *n == name).map(|(_, _, i)| *i).unwrap_or(DEFAULT_ICON)
-}
+use crate::config::Config;
 
 // ── Paths ─────────────────────────────────────────────────────────────────────
 
@@ -255,7 +237,7 @@ impl MonthCache {
 
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 
-pub fn load_or_fetch(year: i32, month: u32) -> Result<MonthCache, Box<dyn std::error::Error>> {
+pub fn load_or_fetch(year: i32, month: u32, config: &Config) -> Result<MonthCache, Box<dyn std::error::Error>> {
     let path = events_cache_path(year, month);
     if path.exists() {
         if let Ok(text) = std::fs::read_to_string(&path) {
@@ -266,10 +248,10 @@ pub fn load_or_fetch(year: i32, month: u32) -> Result<MonthCache, Box<dyn std::e
             }
         }
     }
-    fetch_month(year, month)
+    fetch_month(year, month, config)
 }
 
-fn fetch_month(year: i32, month: u32) -> Result<MonthCache, Box<dyn std::error::Error>> {
+fn fetch_month(year: i32, month: u32, config: &Config) -> Result<MonthCache, Box<dyn std::error::Error>> {
     let token = get_access_token()?;
     let auth = format!("Bearer {}", token);
 
@@ -335,14 +317,17 @@ fn fetch_month(year: i32, month: u32) -> Result<MonthCache, Box<dyn std::error::
                 } else { String::new() }
             } else { String::new() };
 
+            let cal_entry = config.calendars.iter().find(|e| e.name == cal_name);
+            let color = cal_entry.map(|e| e.color.as_str()).unwrap_or(&config.default_cal.color);
+            let icon  = cal_entry.map(|e| e.icon.as_str()).unwrap_or(&config.default_cal.icon);
             all_events.push(CalEvent {
                 date,
                 start_time,
                 end_time,
                 title,
                 calendar: cal_name.to_string(),
-                color: cal_color(cal_name).to_string(),
-                icon: cal_icon(cal_name).to_string(),
+                color: color.to_string(),
+                icon:  icon.to_string(),
                 all_day,
             });
         }
@@ -372,7 +357,7 @@ fn fetch_month(year: i32, month: u32) -> Result<MonthCache, Box<dyn std::error::
 
 // ── Bar output ────────────────────────────────────────────────────────────────
 
-pub fn bar_output() {
+pub fn bar_output(config: &Config) {
     let today = Local::now();
     let year = today.year();
     let month = today.month();
@@ -414,10 +399,9 @@ pub fn bar_output() {
         ])
     } else {
         let stale_badge = if stale { " ⚠" } else { "" };
-        // Count in Catppuccin Mocha red #f38ba8
         let text = format!(
-            "<span size='14pt'>{} <span color='#f38ba8'>{}{}</span></span>",
-            cal_icon, count, stale_badge
+            "<span size='14pt'>{} <span color='{}'>{}{}</span></span>",
+            cal_icon, config.theme.bar_count_color, count, stale_badge
         );
         let tooltip = events_today.iter()
             .map(|e| format!("{}  {}", e.start_time, e.title))

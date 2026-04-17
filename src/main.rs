@@ -1,3 +1,4 @@
+mod config;
 mod gcal;
 
 use std::cell::RefCell;
@@ -14,106 +15,83 @@ use gcal::MonthCache;
 
 const APP_ID: &str = "com.forrestknight.waycal";
 
-const CSS: &str = r#"
-window.waycal {
-    background: transparent;
+fn build_css(t: &config::ThemeConfig) -> String {
+    let bg_rgba       = config::hex_to_rgba(&t.background, 0.96);
+    let accent_sel    = config::hex_to_rgba(&t.accent, 0.22);
+    let accent_border = config::hex_to_rgba(&t.accent, 0.18);
+    format!(
+        "window.waycal {{ background: transparent; }}\
+         .waycal-root {{\
+             background-color: {bg};\
+             border: 2px solid {accent};\
+             border-radius: 0;\
+             padding: 14px 18px;\
+             color: {text};\
+             font-family: {font};\
+             font-size: {fsize}px;\
+         }}\
+         .waycal-root.rounded {{\
+             background-color: {bg_rgba};\
+             border: 2px solid transparent;\
+             border-radius: 16px;\
+         }}\
+         .waycal-header {{ font-weight: bold; font-size: 15px; padding-bottom: 6px; }}\
+         .waycal-weekday {{ color: {accent}; font-weight: bold; padding: 2px 6px; }}\
+         .waycal-day {{ padding: 2px 4px; min-width: 26px; border-radius: 0; }}\
+         .waycal-day.dim {{ opacity: 0.3; }}\
+         .waycal-day-num {{ padding: 2px 5px; }}\
+         .waycal-day.today > .waycal-day-num {{\
+             background-color: {accent};\
+             color: {bg};\
+             border-radius: 0;\
+             font-weight: bold;\
+         }}\
+         .waycal-root.rounded .waycal-day.today > .waycal-day-num {{ border-radius: 8px; }}\
+         .waycal-day.selected > .waycal-day-num {{\
+             background-color: {accent_sel};\
+             border-radius: 0;\
+         }}\
+         .waycal-root.rounded .waycal-day.selected > .waycal-day-num {{ border-radius: 8px; }}\
+         .waycal-day.today.selected > .waycal-day-num {{\
+             background-color: {accent};\
+             color: {bg};\
+         }}\
+         .waycal-dots-row {{ min-height: 7px; }}\
+         .waycal-panel {{\
+             min-width: 190px;\
+             padding-left: 14px;\
+             margin-left: 6px;\
+             border-left: 1px solid {accent_border};\
+         }}\
+         .waycal-panel-header {{\
+             font-weight: bold;\
+             font-size: 13px;\
+             padding-bottom: 8px;\
+             color: {accent};\
+         }}\
+         .waycal-panel-empty {{ color: {muted}; font-size: 12px; }}\
+         .waycal-event-row {{ padding: 2px 0; }}\
+         .waycal-event-icon {{ min-width: 20px; }}\
+         .waycal-event-time {{ color: {muted}; min-width: 46px; font-size: 12px; }}\
+         .waycal-event-title {{ font-size: 12px; }}\
+         .waycal-footer {{\
+             color: {muted};\
+             font-size: 10px;\
+             padding-top: 8px;\
+             margin-top: 6px;\
+             border-top: 1px solid {accent_border};\
+         }}",
+        bg            = t.background,
+        accent        = t.accent,
+        text          = t.text,
+        muted         = t.text_muted,
+        font          = t.font_family,
+        fsize         = t.font_size,
+        bg_rgba       = bg_rgba,
+        accent_sel    = accent_sel,
+        accent_border = accent_border,
+    )
 }
-.waycal-root {
-    background-color: #1a2125;
-    border: 2px solid #8FBC8F;
-    border-radius: 0;
-    padding: 14px 18px;
-    color: #c9d1d9;
-    font-family: "CaskaydiaMono Nerd Font", monospace;
-    font-size: 13px;
-}
-.waycal-root.rounded {
-    background-color: rgba(26, 33, 37, 0.96);
-    border: 2px solid transparent;
-    border-radius: 16px;
-}
-.waycal-header {
-    font-weight: bold;
-    font-size: 15px;
-    padding-bottom: 6px;
-}
-.waycal-weekday {
-    color: #8FBC8F;
-    font-weight: bold;
-    padding: 2px 6px;
-}
-.waycal-day {
-    padding: 2px 4px;
-    min-width: 26px;
-    border-radius: 0;
-}
-.waycal-day.dim {
-    opacity: 0.3;
-}
-.waycal-day-num {
-    padding: 2px 5px;
-}
-.waycal-day.today > .waycal-day-num {
-    background-color: #8FBC8F;
-    color: #1a2125;
-    border-radius: 0;
-    font-weight: bold;
-}
-.waycal-root.rounded .waycal-day.today > .waycal-day-num {
-    border-radius: 8px;
-}
-.waycal-day.selected > .waycal-day-num {
-    background-color: rgba(143, 188, 143, 0.22);
-    border-radius: 0;
-}
-.waycal-root.rounded .waycal-day.selected > .waycal-day-num {
-    border-radius: 8px;
-}
-.waycal-day.today.selected > .waycal-day-num {
-    background-color: #8FBC8F;
-    color: #1a2125;
-}
-.waycal-dots-row {
-    min-height: 7px;
-}
-.waycal-panel {
-    min-width: 190px;
-    padding-left: 14px;
-    margin-left: 6px;
-    border-left: 1px solid rgba(143, 188, 143, 0.18);
-}
-.waycal-panel-header {
-    font-weight: bold;
-    font-size: 13px;
-    padding-bottom: 8px;
-    color: #8FBC8F;
-}
-.waycal-panel-empty {
-    color: #6a7a71;
-    font-size: 12px;
-}
-.waycal-event-row {
-    padding: 2px 0;
-}
-.waycal-event-icon {
-    min-width: 20px;
-}
-.waycal-event-time {
-    color: #6a7a71;
-    min-width: 46px;
-    font-size: 12px;
-}
-.waycal-event-title {
-    font-size: 12px;
-}
-.waycal-footer {
-    color: #6a7a71;
-    font-size: 10px;
-    padding-top: 8px;
-    margin-top: 6px;
-    border-top: 1px solid rgba(143, 188, 143, 0.18);
-}
-"#;
 
 // ── Anchor argument ───────────────────────────────────────────────────────────
 
@@ -214,31 +192,33 @@ fn main() -> glib::ExitCode {
         .map(|w| Anchor::from_str(&w[1]))
         .unwrap_or(Anchor::Center);
 
+    let cfg = config::load();
+
     if bar_output {
-        gcal::bar_output();
+        gcal::bar_output(&cfg);
         return glib::ExitCode::SUCCESS;
     }
 
+    let css = build_css(&cfg.theme);
     let app = gtk4::Application::builder().application_id(APP_ID).build();
-    app.connect_startup(|_| load_css());
-    app.connect_activate(move |app| build_ui(app, anchor));
+    app.connect_startup(move |_| {
+        let provider = gtk4::CssProvider::new();
+        provider.load_from_string(&css);
+        if let Some(display) = gdk::Display::default() {
+            gtk4::style_context_add_provider_for_display(
+                &display, &provider, gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
+            );
+        }
+    });
+    app.connect_activate(move |app| build_ui(app, anchor, cfg.clone()));
     // Pass empty args so GTK doesn't choke on our custom flags
     app.run_with_args(&[] as &[&str])
 }
 
-fn load_css() {
-    let provider = gtk4::CssProvider::new();
-    provider.load_from_string(CSS);
-    if let Some(display) = gdk::Display::default() {
-        gtk4::style_context_add_provider_for_display(
-            &display, &provider, gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    }
-}
-
 // ── UI builder ────────────────────────────────────────────────────────────────
 
-fn build_ui(app: &gtk4::Application, anchor: Anchor) {
+fn build_ui(app: &gtk4::Application, anchor: Anchor, config: config::Config) {
+    let config = std::rc::Rc::new(config);
     let window = gtk4::ApplicationWindow::new(app);
     window.set_decorated(false);
     window.set_resizable(false);
@@ -302,11 +282,12 @@ fn build_ui(app: &gtk4::Application, anchor: Anchor) {
 
     // Kick off background load
     let v = *view_state.borrow();
-    spawn_load(v.year, v.month, &month_data, &grid, &header, &panel, &view_state, &selected_day);
+    spawn_load(v.year, v.month, (*config).clone(), &month_data, &grid, &header, &panel, &view_state, &selected_day);
 
     // Keyboard handler
     let key = gtk4::EventControllerKey::new();
     {
+        let config       = config.clone();
         let view_state   = view_state.clone();
         let selected_day = selected_day.clone();
         let month_data   = month_data.clone();
@@ -344,7 +325,7 @@ fn build_ui(app: &gtk4::Application, anchor: Anchor) {
                 *month_data.borrow_mut() = None;
                 render_all(&grid, &header, &panel, next, *selected_day.borrow(),
                            &month_data, &selected_day);
-                spawn_load(next.year, next.month, &month_data, &grid, &header, &panel,
+                spawn_load(next.year, next.month, (*config).clone(), &month_data, &grid, &header, &panel,
                            &view_state, &selected_day);
             } else {
                 render_all(&grid, &header, &panel, next, *selected_day.borrow(),
@@ -362,6 +343,7 @@ fn build_ui(app: &gtk4::Application, anchor: Anchor) {
 fn spawn_load(
     year: i32,
     month: u32,
+    config:       config::Config,
     month_data:   &Rc<RefCell<Option<MonthCache>>>,
     grid:         &gtk4::Grid,
     header:       &gtk4::Label,
@@ -372,7 +354,7 @@ fn spawn_load(
     let (tx, rx) = std::sync::mpsc::channel::<Result<MonthCache, String>>();
 
     std::thread::spawn(move || {
-        let result = gcal::load_or_fetch(year, month).map_err(|e| e.to_string());
+        let result = gcal::load_or_fetch(year, month, &config).map_err(|e| e.to_string());
         let _ = tx.send(result);
     });
 
